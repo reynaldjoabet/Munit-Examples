@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
-// class CopyFilesTest extends CatsEffectSuite {
+ class CopyFilesTest extends CatsEffectSuite {
 //   var sourceFile: Option[File]      = None
 //   var destinationFile: Option[File] = None
 
@@ -42,4 +42,4 @@ import java.util.concurrent.TimeUnit
 //       _                    <- assertIO(getAmountOfBytesFromFile(destinationFile.get), bytesTransferred)
 //     } yield ()
 //   }
-// }
+ }

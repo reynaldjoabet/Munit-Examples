@@ -59,7 +59,7 @@ val Hedgehog       = TestFramework("hedgehog.sbt.Framework")
 // TestFrameworks.ScalaCheck
 // TestFrameworks.JUnit
 
-coverageEnabled := true
+//coverageEnabled := true
 
 scalacOptions ++= Seq(
   "-feature",

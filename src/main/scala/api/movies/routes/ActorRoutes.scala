@@ -8,8 +8,8 @@ import api.movies.MoviesStore
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.http4s.circe.CirceEntityCodec.circeEntityEncoder
-//import cats.syntax.all._
-import cats.implicits._
+import cats.syntax.all._
+//import cats.implicits._
 import cats.Show
 import cats.FlatMap
 object ActorRoutes {
@@ -37,6 +37,4 @@ object ActorRoutes {
   // cats.implicits has both the extension methods and the instances
   // cats.syntax has only the extension methods
 
-  // import cats.instances.AllInstances
-  // import cats.syntax.all
 }

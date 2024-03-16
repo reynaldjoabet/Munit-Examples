@@ -30,7 +30,7 @@ final class MonoidOps[A: Monoid](lhs: A) {
   def |+|(rhs: A): A = implicitly[Monoid[A]].combine(lhs, rhs)
 }
 
-object MonoidSyntax extends App {
+object MonoidApp extends App {
   import Monoid.syntax._
   println(3 |+| 4)
   println("a" |+| "b")

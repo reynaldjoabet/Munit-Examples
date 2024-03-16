@@ -21,10 +21,12 @@ import org.http4s.client.{ Client, JavaNetClientBuilder }
 import cats.effect.implicits._
 import cats.syntax.all._
 import scala.concurrent.duration._
+import org.http4s.ember.client.EmberClientBuilder
 
 object MovieRoutes {
 
   def routes[F[_]: Async](moviesStore: MoviesStore[F]): HttpRoutes[F] = {
+    EmberClientBuilder.default
     val client: Client[F] = JavaNetClientBuilder[F].create
     val dsl               = new Http4sDsl[F] {}
     import dsl._
@@ -130,11 +132,12 @@ object MovieRoutes {
       /** Get movies rating
         */
       case GET -> Root / "api" / "movies" / "rating" =>
+        
         for {
           movies <- moviesStore.getAllMovies
           titles = movies.map(_.movie.title)
           movieRatingPairsList <- titles.parTraverse(title =>
-            moviesStore.getMoviesRating(title, client).map(r => (title, r))
+            Async[F].delay(title->33)//moviesStore.getMoviesRating(title, client).map(r => (title, r)) //         //EmberClientBuilder.default.build.use(client=>moviesStore.getMoviesRating(title, client).map(r => (title, r))
           )
           (bestTitle, score) = movieRatingPairsList.maxBy(_._2)
           response <- Ok(

@@ -12,5 +12,5 @@ object CounterExample extends IOApp.Simple {
       _      <- fibers.traverse(_.join).void
       value  <- state.get
       _      <- IO.println(s"The final value is: $value") // => The final value is: 100
-    } yield ExitCode.Success
+    } yield ()
 }

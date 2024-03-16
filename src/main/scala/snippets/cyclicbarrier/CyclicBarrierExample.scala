@@ -20,5 +20,5 @@ object CyclicBarrierExample extends IOApp.Simple {
         barrier.await >>
         IO.println("slow fiber after barrier")).start
       _ <- (f1.join, f2.join).tupled
-    } yield ExitCode.Success
+    } yield ()
 }
