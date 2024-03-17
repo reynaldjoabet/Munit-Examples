@@ -71,3 +71,13 @@ If you want to import typeclass instances for Option for some reason:
 }
 // res1: Option[Int] = Some(value = 0)
 ```
+
+
+coverage                        coverageExcludedPackages          coverageMinimumBranchTotal        coverageOn                        coverageOutputXML
+coverageAggregate                 coverageFailOnMinimum             coverageMinimumStmtPerFile        coverageOutputCobertura           coverageReport
+coverageDataDir                   coverageHighlighting              coverageMinimumStmtPerPackage     coverageOutputDebug               coverageScalacPluginVersion
+coverageEnabled                   coverageMinimumBranchPerFile      coverageMinimumStmtTotal          coverageOutputHTML   
+
+
+
+sbt plugins just define tasks and settings 

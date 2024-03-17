@@ -28,7 +28,8 @@ lazy val root = (project in file(".")).settings(
     "-feature",
     "-deprecation",
     "-unchecked",
-    "-language:postfixOps"
+    "-language:postfixOps",
+    "-Xasync"
   )
 )
 
@@ -60,11 +61,13 @@ val Hedgehog       = TestFramework("hedgehog.sbt.Framework")
 // TestFrameworks.JUnit
 
 //coverageEnabled := true
+ThisBuild / pushRemoteCacheTo := Some("Nexus OSS 3 Remote Cache" at "http://localhost:8081/repository/sbt-build-cache/")
 
-scalacOptions ++= Seq(
-  "-feature",
-  "-deprecation",
-  "-unchecked",
-  "-language:postfixOps",
-  "-Xasync"
-)
+
+//publishConfiguration := publishConfiguration.value.withOverwrite(true)
+ //publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
+
+ //Compile/pushRemoteCacheConfiguration := pushRemoteCacheConfiguration.value.withOverwrite(true)
+
+
+
