@@ -8,6 +8,26 @@ val `http4s-munit` = "com.alejandrohdezma" %% "http4s-munit" % "0.15.1" % Test
 
 val munit = "org.scalameta" %% "munit" % "0.7.29" % Test
 
+val compilationCacheSettings: Seq[Def.Setting[_]] = Seq(
+    Compile / remoteCacheId := "id"/* this will set the folder of the compiled artifacts to 0.0.0-id */,
+    Compile / pushRemoteCacheConfiguration ~= (_.withOverwrite(true)),
+    //Test / remoteCacheId := "id",
+    Test / pushRemoteCacheConfiguration ~= (_.withOverwrite(true)),
+Test / packageCache / pushRemoteCacheArtifact := true, /* defaults to true */
+   pushRemoteCacheTo := Some("Nexus OSS 3 Remote Cache" at "http://localhost:8081/repository/sbt-build-cache/")
+    //ThisBuild / pushRemoteCacheTo := Some(MavenCache("local-cache", file("/tmp/remote-cache")))
+    // setup remote cache
+       //pushRemoteCacheTo := Some(MavenCache("local-cache", (ThisBuild / baseDirectory).value / "remote-cache")),
+      //  Compile / pushRemoteCacheConfiguration := (Compile / pushRemoteCacheConfiguration).value.withOverwrite(true),
+      //  Test / pushRemoteCacheConfiguration := (Compile / pushRemoteCacheConfiguration).value.withOverwrite(true),
+    // ThisBuild / pushRemoteCacheTo := Some(
+    //  MavenCache("local-cache", baseDirectory.value / "sbt-cache")
+    // )
+  )
+
+  // Run tests in a separate JVM to prevent resource leaks.
+  //ThisBuild / Test / fork := true
+//usePipelining := true
 lazy val root = (project in file(".")).settings(
   libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-core"           % "2.9.0",
@@ -24,13 +44,14 @@ lazy val root = (project in file(".")).settings(
     `http4s-munit`,
     munit
   ),
-  scalacOptions ++= Seq(
-    "-feature",
-    "-deprecation",
-    "-unchecked",
-    "-language:postfixOps",
-    "-Xasync"
-  )
+  // scalacOptions ++= Seq(
+  //    "-feature",
+  //    "-deprecation",
+  //    "-unchecked",
+  //    "-language:postfixOps",
+  //    "-Xasync"
+  //  ),
+   compilationCacheSettings
 )
 
 name := "Munit-Examples"
@@ -61,13 +82,86 @@ val Hedgehog       = TestFramework("hedgehog.sbt.Framework")
 // TestFrameworks.JUnit
 
 //coverageEnabled := true
-ThisBuild / pushRemoteCacheTo := Some("Nexus OSS 3 Remote Cache" at "http://localhost:8081/repository/sbt-build-cache/")
-
-
-//publishConfiguration := publishConfiguration.value.withOverwrite(true)
- //publishLocalConfiguration := publishLocalConfiguration.value.withOverwrite(true)
-
- //Compile/pushRemoteCacheConfiguration := pushRemoteCacheConfiguration.value.withOverwrite(true)
 
 
 
+
+// Test / parallelExecution := true
+// Test / fork              := true
+
+
+  //      Compile / packageCache / pushRemoteCacheArtifact := true
+
+  //      Test / packageCache / pushRemoteCacheArtifact := true
+
+
+
+      //  inThisBuild(
+      //    Seq(
+      //      version           := "0.1.0-SNAPSHOT",
+      //      scalaVersion      := "2.13.10",
+      //      semanticdbEnabled := true,
+      //      semanticdbVersion := scalafixSemanticdb.revision,
+      //      pushRemoteCacheTo := Some(MavenCache("local-cache", file("/tmp/sbt-remote-cache"))),
+      //    )
+      //  )
+
+
+
+      // val r = remoteCacheResolvers.value.head
+      //        val p = remoteCacheProjectId.value
+      //        val ids = remoteCacheIdCandidates.value
+      //        val is = (pushRemoteCache / ivySbt).value
+
+
+      // pushRemoteCacheConfiguration / publishMavenStyle := true
+      //    Compile / packageCache / pushRemoteCacheArtifact := true
+      //    Test / packageCache / pushRemoteCacheArtifact := true
+      //    Compile / packageCache / artifact := Artifact(moduleName.value, cachedCompileClassifier)
+      //    Test / packageCache / artifact := Artifact(moduleName.value, cachedTestClassifier)
+      //    remoteCachePom / pushRemoteCacheArtifact := true
+
+
+
+
+
+// ThisBuild / publishMavenStyle := true
+
+
+
+
+  //To disable checksum checking during update:
+
+  ///update / checksums := Nil
+  //To disable checksum creation during artifact publishing:
+
+  //publishLocal / checksums := Nil
+
+  //publish / checksums := Nil
+  //The default value is:
+
+  //checksums := Seq("sha1", "md5")
+
+  //conflictManager := ConflictManager.strict
+logLevel := Level.Debug
+  incOptions := incOptions.value
+    .withIgnoredScalacOptions(
+      incOptions.value.ignoredScalacOptions ++ Array(
+        "-Xplugin:.*",
+        "-Ybackend-parallelism [\\d]+"
+      )
+    ).withApiDebug(true)
+
+    //incOptions := incOptions.value.withLogRecompileOnMacro(true)
+
+
+
+    // incOptions := incOptions.value.withApiDebug(true)
+
+    addCommandAlias("ci", "clean; pullRemoteCache; test")
+
+//externalResolvers := Resolver.withDefaultResolvers(resolvers.value, mavenCentral = false)
+
+//resolvers += "Nexus" at "http://localhost:8081/nexus/content/groups/public"
+    //commands ++= Seq()
+//addCommandAlias("runLinter", ";scalafixAll --rules OrganizeImports")
