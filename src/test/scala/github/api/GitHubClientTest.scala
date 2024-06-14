@@ -1,11 +1,14 @@
 package github.api
 
-import common.{ Config, Errors }
-import github.data.{ Contributor, Repository }
+import java.time.temporal.ChronoField
+import java.time.Instant
 
-import cats.effect.{ IO, Resource }
-import io.circe.Json
+import cats.effect.{IO, Resource}
+
+import common.{Config, Errors}
+import github.data.{Contributor, Repository}
 import io.circe.syntax._
+import io.circe.Json
 import munit.CatsEffectSuite
 import org.http4s.{
   EmptyBody,
@@ -17,21 +20,19 @@ import org.http4s.{
   Response,
   Status
 }
-import org.http4s.client.Client
 import org.http4s.circe._
 import org.http4s.circe.CirceEntityCodec._
+import org.http4s.client.Client
 import org.typelevel.ci.CIString
 
-import java.time.Instant
-import java.time.temporal.ChronoField
-
 class GitHubClientTest extends CatsEffectSuite {
+
   private val config = Config.GitHub("token", 10)
 
   private def mockClient(
-      body: EntityBody[IO] = EmptyBody,
-      status: Status = Status.Ok,
-      headers: Headers = Headers.empty
+    body: EntityBody[IO] = EmptyBody,
+    status: Status = Status.Ok,
+    headers: Headers = Headers.empty
   ): Client[IO] =
     Client.apply[IO] { _ =>
       Resource.liftK.apply(IO(Response(status = status, headers = headers, body = body)))
@@ -40,7 +41,9 @@ class GitHubClientTest extends CatsEffectSuite {
   private def jsonEntityBody(json: Json): EntityBody[IO] =
     jsonEncoderOf[IO, Json].toEntity(json).body
 
-  test("Getting repositories of organization returns empty list when organization has no repositories") {
+  test(
+    "Getting repositories of organization returns empty list when organization has no repositories"
+  ) {
     val http   = mockClient(status = Status.NoContent)
     val client = new GitHubClient(http, config)
 
@@ -51,8 +54,9 @@ class GitHubClientTest extends CatsEffectSuite {
     val http   = mockClient(status = Status.NotFound)
     val client = new GitHubClient(http, config)
 
-    interceptIO[Errors.OrganizationNotFound](client.repositoriesOfOrganization("test")).map { error =>
-      assertEquals(error.organization, "test")
+    interceptIO[Errors.OrganizationNotFound](client.repositoriesOfOrganization("test")).map {
+      error =>
+        assertEquals(error.organization, "test")
     }
   }
 
@@ -78,7 +82,9 @@ class GitHubClientTest extends CatsEffectSuite {
     assertIO(client.repositoriesOfOrganization("test"), repositories)
   }
 
-  test("Getting contributors of repository returns empty list when repository has no contributors") {
+  test(
+    "Getting contributors of repository returns empty list when repository has no contributors"
+  ) {
     val http   = mockClient(status = Status.NoContent)
     val client = new GitHubClient(http, config)
 
@@ -89,10 +95,11 @@ class GitHubClientTest extends CatsEffectSuite {
     val http   = mockClient(status = Status.NotFound)
     val client = new GitHubClient(http, config)
 
-    interceptIO[Errors.RepositoryNotFound](client.contributorsOfRepository("test-organization", "test-repository"))
-      .map { error =>
-        assertEquals(error.repository, "test-organization/test-repository")
-      }
+    interceptIO[Errors.RepositoryNotFound](
+      client.contributorsOfRepository("test-organization", "test-repository")
+    ).map { error =>
+      assertEquals(error.repository, "test-organization/test-repository")
+    }
   }
 
   test("Getting contributors of repository fails when API response cannot be parsed") {
@@ -109,7 +116,8 @@ class GitHubClientTest extends CatsEffectSuite {
   }
 
   test("Getting contributors of repository returns empty list when contributor list is too large") {
-    val http   = mockClient(body = jsonEntityBody(Json.obj("message" := "contributor list is too large")))
+    val http =
+      mockClient(body = jsonEntityBody(Json.obj("message" := "contributor list is too large")))
     val client = new GitHubClient(http, config)
 
     assertIO(client.contributorsOfRepository("test", "test"), List.empty[Contributor])
@@ -141,7 +149,14 @@ class GitHubClientTest extends CatsEffectSuite {
     val client = new GitHubClient(http, config)
 
     val response =
-      client.paginatedGetRequest("test", GitHubClient.apiHost, 1, None, PartialFunction.empty, _.as[List[Json]])
+      client.paginatedGetRequest(
+        "test",
+        GitHubClient.apiHost,
+        1,
+        None,
+        PartialFunction.empty,
+        _.as[List[Json]]
+      )
 
     interceptIO[Errors.RateLimited](response).map { error =>
       assertEquals(error.resetInstant, instant.`with`(ChronoField.NANO_OF_SECOND, 0))
@@ -167,11 +182,21 @@ class GitHubClientTest extends CatsEffectSuite {
   }
 
   test("Paginated request fails when response status is not successful") {
-    val http   = mockClient(status = Status.InternalServerError, body = jsonEntityBody(Json.obj("message" := "test")))
+    val http = mockClient(
+      status = Status.InternalServerError,
+      body = jsonEntityBody(Json.obj("message" := "test"))
+    )
     val client = new GitHubClient(http, config)
 
     val response =
-      client.paginatedGetRequest("test", GitHubClient.apiHost, 1, None, PartialFunction.empty, _.as[List[Json]])
+      client.paginatedGetRequest(
+        "test",
+        GitHubClient.apiHost,
+        1,
+        None,
+        PartialFunction.empty,
+        _.as[List[Json]]
+      )
 
     interceptIO[Errors.Unavailable](response).map { error =>
       assert(error.maybeCause.isEmpty)
@@ -184,7 +209,14 @@ class GitHubClientTest extends CatsEffectSuite {
     val client = new GitHubClient(http, config)
 
     val response =
-      client.paginatedGetRequest("test", GitHubClient.apiHost, 1, None, PartialFunction.empty, _.as[List[Json]])
+      client.paginatedGetRequest(
+        "test",
+        GitHubClient.apiHost,
+        1,
+        None,
+        PartialFunction.empty,
+        _.as[List[Json]]
+      )
 
     interceptIO[InvalidMessageBodyFailure](response)
   }
@@ -194,7 +226,14 @@ class GitHubClientTest extends CatsEffectSuite {
     val client = new GitHubClient(http, config)
 
     val response =
-      client.paginatedGetRequest("test", GitHubClient.apiHost, 1, None, PartialFunction.empty, _.as[List[Json]])
+      client.paginatedGetRequest(
+        "test",
+        GitHubClient.apiHost,
+        1,
+        None,
+        PartialFunction.empty,
+        _.as[List[Json]]
+      )
 
     assertIO(response, List("test".asJson))
   }
@@ -206,21 +245,34 @@ class GitHubClientTest extends CatsEffectSuite {
           val response1 = Response(
             body = jsonEntityBody(Json.arr("test".asJson)),
             headers = Headers(
-              Header.Raw(CIString("Link"), """<https://api.github.com?page=2&per_page=10>; rel="last"""")
+              Header.Raw(
+                CIString("Link"),
+                """<https://api.github.com?page=2&per_page=10>; rel="last""""
+              )
             )
           )
           Resource.liftK.apply(IO(response1))
 
         case "2" =>
           val response2 =
-            Response[IO](status = Status.InternalServerError, body = jsonEntityBody(Json.obj("message" := "test")))
+            Response[IO](
+              status = Status.InternalServerError,
+              body = jsonEntityBody(Json.obj("message" := "test"))
+            )
           Resource.liftK.apply(IO(response2))
       }
     }
     val client = new GitHubClient(http, config)
 
     val response =
-      client.paginatedGetRequest("test", GitHubClient.apiHost, 1, None, PartialFunction.empty, _.as[List[Json]])
+      client.paginatedGetRequest(
+        "test",
+        GitHubClient.apiHost,
+        1,
+        None,
+        PartialFunction.empty,
+        _.as[List[Json]]
+      )
 
     interceptIO[Errors.Unavailable](response).map { error =>
       assert(error.maybeCause.isEmpty)
@@ -235,7 +287,10 @@ class GitHubClientTest extends CatsEffectSuite {
           val response1 = Response(
             body = jsonEntityBody(Json.arr("test1".asJson)),
             headers = Headers(
-              Header.Raw(CIString("Link"), """<https://api.github.com?page=2&per_page=10>; rel="last"""")
+              Header.Raw(
+                CIString("Link"),
+                """<https://api.github.com?page=2&per_page=10>; rel="last""""
+              )
             )
           )
           Resource.liftK.apply(IO(response1))
@@ -248,7 +303,14 @@ class GitHubClientTest extends CatsEffectSuite {
     val client = new GitHubClient(http, config)
 
     val response =
-      client.paginatedGetRequest("test", GitHubClient.apiHost, 1, None, PartialFunction.empty, _.as[List[Json]])
+      client.paginatedGetRequest(
+        "test",
+        GitHubClient.apiHost,
+        1,
+        None,
+        PartialFunction.empty,
+        _.as[List[Json]]
+      )
 
     assertIO(response, List("test1".asJson, "test2".asJson))
   }
@@ -288,7 +350,9 @@ class GitHubClientTest extends CatsEffectSuite {
   }
 
   test("Failing with response details returns parse error as cause when no cause is given") {
-    interceptIO[Errors.Unavailable](GitHubClient.failWithResponseDetails(Response[IO](), "test", None)).map { error =>
+    interceptIO[Errors.Unavailable](
+      GitHubClient.failWithResponseDetails(Response[IO](), "test", None)
+    ).map { error =>
       assert(
         error.maybeCause.exists(_.isInstanceOf[MalformedMessageBodyFailure]),
         s"Error wasn't MalformedMessageBodyFailure but was ${error.maybeCause.map(_.getClass.getSimpleName)}"
@@ -309,4 +373,5 @@ class GitHubClientTest extends CatsEffectSuite {
       assertEquals(error.details, Some("test"))
     }
   }
+
 }

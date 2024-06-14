@@ -1,26 +1,28 @@
 package api.movies
 
-import cats.effect.kernel.Ref
-import cats.effect.{ Async, IO, Sync }
-import cats.implicits._
-import Models._
-import api.movies.Utils.IMDB
-import org.http4s.EntityDecoder
-import org.http4s.circe._
-import org.http4s.client.Client
-import io.circe.Json
-import org.http4s.circe.jsonOf
-
 import java.util.UUID
 
+import cats.effect.{Async, IO, Sync}
+import cats.effect.kernel.Ref
+import cats.implicits._
+
+import api.movies.Utils.IMDB
+import io.circe.Json
+import org.http4s.circe._
+import org.http4s.circe.jsonOf
+import org.http4s.client.Client
+import org.http4s.EntityDecoder
+import Models._
+
 class MoviesStore[F[_]: Async](private val stateRef: Ref[F, MoviesStore.State]) {
+
   /* Movies crud */
   def getMovieById(id: UUID): F[Option[MovieWithId]] = stateRef.get.map(_.find(_.id == id.toString))
 
   def createMovie(movie: Movie): F[MovieWithId] = for {
-    uuid <- Sync[F].delay(UUID.randomUUID().toString)
+    uuid      <- Sync[F].delay(UUID.randomUUID().toString)
     movieToAdd = MovieWithId(uuid, movie)
-    _ <- stateRef.update(state => (movieToAdd :: state))
+    _         <- stateRef.update(state => movieToAdd :: state)
   } yield movieToAdd
 
   def updateMovie(id: UUID, movie: Movie): F[Unit] = stateRef.update(state =>
@@ -32,6 +34,7 @@ class MoviesStore[F[_]: Async](private val stateRef: Ref[F, MoviesStore.State]) 
 
   def deleteMovie(id: UUID): F[Unit] =
     stateRef.update(state => state.filterNot(_.id == id.toString))
+
   /*get movies list with filters*/
   def getAllMovies: F[List[MovieWithId]] = stateRef.get
 
@@ -41,43 +44,45 @@ class MoviesStore[F[_]: Async](private val stateRef: Ref[F, MoviesStore.State]) 
   def getFilteredMoviesByGenre(genre: String): F[List[MovieWithId]] =
     stateRef.get.map(_.filter(_.movie.genres.contains(genre)))
 
-  def getFilteredMoviesByActor(actor: String): F[List[MovieWithId]] = stateRef.get.map(state =>
-    actor.split(" ") match {
-      case Array(name, surname) =>
-        state.filter(movieWithId =>
-          movieWithId.movie.actors
-            .map(actor => (actor.firstName, actor.lastName))
-            .contains((name, surname))
-        )
-      case _ => Nil
-    }
-  )
-
-  def getFilteredMoviesByDirector(director: String): F[List[MovieWithId]] =
-    stateRef.get.map(state =>
-      director.split(" ") match {
+  def getFilteredMoviesByActor(actor: String): F[List[MovieWithId]] = stateRef
+    .get
+    .map(state =>
+      actor.split(" ") match {
         case Array(name, surname) =>
           state.filter(movieWithId =>
-            movieWithId.movie.director.firstName == name
-              && movieWithId.movie.director.lastName == surname
+            movieWithId
+              .movie
+              .actors
+              .map(actor => (actor.firstName, actor.lastName))
+              .contains((name, surname))
           )
         case _ => Nil
       }
     )
 
+  def getFilteredMoviesByDirector(director: String): F[List[MovieWithId]] =
+    stateRef
+      .get
+      .map(state =>
+        director.split(" ") match {
+          case Array(name, surname) =>
+            state.filter(movieWithId =>
+              movieWithId.movie.director.firstName == name
+                && movieWithId.movie.director.lastName == surname
+            )
+          case _ => Nil
+        }
+      )
+
   def getMoviesRating(title: String, client: Client[F]): F[Double] = {
     val informationMovieUrl = IMDB.getIMDBMovieInfoUrl(title.replaceAll(" ", "%20"))
     for {
       informationMovieJson <- client.expect[Json](informationMovieUrl)
-      movieId = informationMovieJson.hcursor
-        .downField("results")
-        .downArray
-        .get[String]("id")
-        .toOption
-        .get
-      urlRating = IMDB.getIMDBRatingUrl(movieId)
+      movieId =
+        informationMovieJson.hcursor.downField("results").downArray.get[String]("id").toOption.get
+      urlRating        = IMDB.getIMDBRatingUrl(movieId)
       ratingMovieJson <- client.expect[Json](urlRating)
-      rating = ratingMovieJson.hcursor.get[String]("imDb").toOption.get.toDouble
+      rating           = ratingMovieJson.hcursor.get[String]("imDb").toOption.get.toDouble
     } yield rating
 
   }
@@ -106,9 +111,11 @@ class MoviesStore[F[_]: Async](private val stateRef: Ref[F, MoviesStore.State]) 
         case None => state
       }
     )
+
 }
 
 object MoviesStore {
+
   type State = List[MovieWithId]
 
   def apply[F[_]: Async](stateRef: Ref[F, State]): MoviesStore[F] = new MoviesStore[F](stateRef)
@@ -152,4 +159,5 @@ object MoviesStore {
 
   def createWithSeedData[F[_]: Async]: F[MoviesStore[F]] =
     Ref.of[F, State](seedState).map(MoviesStore[F])
+
 }

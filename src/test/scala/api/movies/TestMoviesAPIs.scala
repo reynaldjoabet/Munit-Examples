@@ -1,20 +1,22 @@
 package api.movies
 
-import api.movies.Models.{ Actor, Director, Movie }
-import api.movies.Main.buildHttpApp
-import org.http4s.client.UnexpectedStatus
 import cats.effect.IO
-import io.circe.Json
-import org.http4s.Status.{ NotFound, Ok }
-import org.http4s.{ Method, Request, Response, Uri }
-import org.http4s.client.Client
-import munit.CatsEffectSuite
-import org.http4s.circe.CirceEntityCodec._
-import io.circe.syntax._
-import io.circe.generic.auto._
+
+import api.movies.Main.buildHttpApp
+import api.movies.Models.{Actor, Director, Movie}
 import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
+import io.circe.Json
+import munit.CatsEffectSuite
+import org.http4s.{Method, Request, Response, Uri}
+import org.http4s.circe.CirceEntityCodec._
+import org.http4s.client.Client
+import org.http4s.client.UnexpectedStatus
+import org.http4s.Status.{NotFound, Ok}
 
 class TestMoviesAPIs extends CatsEffectSuite {
+
   private val TOP_GUN_ID = "957675e9-5480-426f-83fb-4c1f0c7a060e"
   private val TITANIC_ID = "e73a99e4-2554-4d29-bd94-651b282e81ab"
 
@@ -44,12 +46,12 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       response <- client.get.expect[Json](request).attempt
       _ <- assertIO(
-        IO(
-          response.isLeft && response.left
-            .exists(_.isInstanceOf[org.http4s.client.UnexpectedStatus])
-        ),
-        true
-      )
+             IO(
+               response
+                 .isLeft && response.left.exists(_.isInstanceOf[org.http4s.client.UnexpectedStatus])
+             ),
+             true
+           )
     } yield ()
   }
 
@@ -60,9 +62,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
       json <- client.get.expect[Json](request)
       _    <- assertIO(IO(json.asArray.fold(0)(_.size)), 2)
       _ <- assertIO(
-        IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
-        Some("Titanic")
-      )
+             IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
+             Some("Titanic")
+           )
     } yield ()
   }
 
@@ -72,9 +74,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       json <- client.get.expect[Json](request)
       _ <- assertIO(
-        IO(json.hcursor.downField("movie").get[String]("title").toOption),
-        Some("Top Gun")
-      )
+             IO(json.hcursor.downField("movie").get[String]("title").toOption),
+             Some("Top Gun")
+           )
     } yield ()
   }
 
@@ -84,9 +86,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       json <- client.get.expect[Json](request)
       _ <- assertIO(
-        IO(json.hcursor.downField("movie").get[String]("title").toOption),
-        Some(newMovie.title)
-      )
+             IO(json.hcursor.downField("movie").get[String]("title").toOption),
+             Some(newMovie.title)
+           )
     } yield ()
   }
 
@@ -97,9 +99,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       json <- client.get.expect[Json](request)
       _ <- assertIO(
-        IO(json.hcursor.downField("movie").get[String]("title").toOption),
-        Some(newMovie.title)
-      )
+             IO(json.hcursor.downField("movie").get[String]("title").toOption),
+             Some(newMovie.title)
+           )
     } yield ()
   }
 
@@ -115,11 +117,11 @@ class TestMoviesAPIs extends CatsEffectSuite {
       moviesStoreSize     <- IO(jsonAllMoviesBefore.asArray.fold(0)(_.size))
       json                <- client.get.expect[Json](request)
       _ <- IO(json.asString.get).map(s =>
-        assert(
-          s == "Successfully deleted movie " +
-            TOP_GUN_ID
-        )
-      )
+             assert(
+               s == "Successfully deleted movie " +
+                 TOP_GUN_ID
+             )
+           )
       jsonAllMovies <- client.get.expect[Json](requestAllMoviesAfter)
       _             <- assertIO(IO(jsonAllMovies.asArray.fold(0)(_.size)), moviesStoreSize - 1)
     } yield ()
@@ -134,9 +136,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
       json <- client.get.expect[Json](request)
       _    <- assertIO(IO(json.asArray.fold(0)(_.size)), 1)
       _ <- assertIO(
-        IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
-        Some("Titanic")
-      )
+             IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
+             Some("Titanic")
+           )
     } yield ()
   }
 
@@ -147,9 +149,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
       json <- client.get.expect[Json](request)
       _    <- assertIO(IO(json.asArray.fold(0)(_.size)), 1)
       _ <- assertIO(
-        IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
-        Some("Titanic")
-      )
+             IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
+             Some("Titanic")
+           )
     } yield ()
   }
 
@@ -159,13 +161,13 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       json <- client.get.expect[Json](request)
       _ <- assertIO(
-        IO(json.asArray.fold(0)(_.size)),
-        2
-      ) // aspect 2 after general execution, aspect 1 on single execution
+             IO(json.asArray.fold(0)(_.size)),
+             2
+           ) // aspect 2 after general execution, aspect 1 on single execution
       _ <- assertIO(
-        IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
-        Some("The Terminator")
-      ) // aspect Titanic on single execution
+             IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
+             Some("The Terminator")
+           ) // aspect Titanic on single execution
     } yield ()
   }
 
@@ -178,9 +180,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
       json <- client.get.expect[Json](request)
       _    <- assertIO(IO(json.asArray.fold(0)(_.size)), 1)
       _ <- assertIO(
-        IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
-        Some("Titanic")
-      )
+             IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
+             Some("Titanic")
+           )
     } yield ()
   }
 
@@ -191,9 +193,9 @@ class TestMoviesAPIs extends CatsEffectSuite {
       json <- client.get.expect[Json](request)
       _    <- assertIO(IO(json.asArray.fold(0)(_.size)), 1)
       _ <- assertIO(
-        IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
-        Some("Titanic")
-      )
+             IO(json.asArray.get.head.hcursor.downField("movie").get[String]("title").toOption),
+             Some("Titanic")
+           )
     } yield ()
   }
 
@@ -203,12 +205,12 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       response <- client.get.expect[Json](request).attempt
       _ <- assertIO(
-        IO(
-          response.isLeft && response.left
-            .exists(_.isInstanceOf[org.http4s.client.UnexpectedStatus])
-        ),
-        true
-      )
+             IO(
+               response
+                 .isLeft && response.left.exists(_.isInstanceOf[org.http4s.client.UnexpectedStatus])
+             ),
+             true
+           )
     } yield ()
   }
 
@@ -227,11 +229,11 @@ class TestMoviesAPIs extends CatsEffectSuite {
       json <- client.get.expect[Json](request)
       _    <- IO(json.asArray.fold(0)(_.size)).map(size => assert(size > 0))
       _ <- IO(json.asArray.flatMap(_.headOption.flatMap(_.asObject))).map { maybeObject =>
-        assert(maybeObject.exists(_.contains("firstName")))
-        assert(
-          maybeObject.exists(_("firstName").flatMap(_.asString).exists(_ == "Arnold"))
-        ) // on single execution aspect Kate
-      }
+             assert(maybeObject.exists(_.contains("firstName")))
+             assert(
+               maybeObject.exists(_("firstName").flatMap(_.asString).exists(_ == "Arnold"))
+             ) // on single execution aspect Kate
+           }
     } yield ()
   }
 
@@ -261,12 +263,13 @@ class TestMoviesAPIs extends CatsEffectSuite {
     for {
       response <- client.get.expect[Json](request).attempt
       _ <- assertIO(
-        IO(
-          response.isLeft && response.left
-            .exists(_.isInstanceOf[java.lang.IllegalArgumentException])
-        ),
-        true
-      )
+             IO(
+               response
+                 .isLeft && response.left.exists(_.isInstanceOf[java.lang.IllegalArgumentException])
+             ),
+             true
+           )
     } yield ()
   }
+
 }

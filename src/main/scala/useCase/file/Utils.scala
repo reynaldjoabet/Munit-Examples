@@ -1,12 +1,14 @@
 package useCase.file
 
-import cats.effect.{ IO, Resource }
-import cats.implicits._
-
 import java.io._
+
 import scala.concurrent.duration.DurationInt
 
-/** Utils method for handle file with Cats-Effect.
+import cats.effect.{IO, Resource}
+import cats.implicits._
+
+/**
+  * Utils method for handle file with Cats-Effect.
   */
 object Utils {
 
@@ -25,9 +27,8 @@ object Utils {
     }
   }
 
-  private def inputStreamAutoClosable(file: File): Resource[IO, FileInputStream] = {
+  private def inputStreamAutoClosable(file: File): Resource[IO, FileInputStream] =
     Resource.fromAutoCloseable(IO.blocking(new FileInputStream(file)))
-  }
 
   private def outputStream(file: File): Resource[IO, FileOutputStream] = {
     Resource.make { // Acquire resource
@@ -37,11 +38,11 @@ object Utils {
     }
   }
 
-  private def outputStreamAutoClosable(file: File): Resource[IO, FileOutputStream] = {
+  private def outputStreamAutoClosable(file: File): Resource[IO, FileOutputStream] =
     Resource.fromAutoCloseable(IO.blocking(new FileOutputStream(file)))
-  }
 
-  /** Method that create InputStream and OutputStream from input and output file
+  /**
+    * Method that create InputStream and OutputStream from input and output file
     *
     * @param inputFile
     *   file for input
@@ -50,7 +51,10 @@ object Utils {
     * @return
     *   Resource that encapsulates both resources in a single Resource instance
     */
-  def inputOutputStreams(inputFile: File, outputFile: File): Resource[IO, (InputStream, OutputStream)] = {
+  def inputOutputStreams(
+    inputFile: File,
+    outputFile: File
+  ): Resource[IO, (InputStream, OutputStream)] = {
     for {
       inStream  <- inputStream(inputFile)
       outStream <- outputStream(outputFile)
@@ -58,10 +62,10 @@ object Utils {
   }
 
   private def transmit(
-      originFile: InputStream,
-      destinationFile: OutputStream,
-      buffer: Array[Byte],
-      acc: Long
+    originFile: InputStream,
+    destinationFile: OutputStream,
+    buffer: Array[Byte],
+    acc: Long
   ): IO[Long] = {
     for {
       amount <- IO.blocking(originFile.read(buffer, 0, buffer.length))
@@ -80,7 +84,8 @@ object Utils {
   private def transfer(originFile: InputStream, destinationFile: OutputStream): IO[Long] =
     transmit(originFile, destinationFile, new Array[Byte](1024 * 10), 0L)
 
-  /** Method that copy data from file to another.
+  /**
+    * Method that copy data from file to another.
     *
     * @param originFile
     *   file of data to copy
@@ -98,9 +103,10 @@ object Utils {
       .bracket { case (in, out) =>
         transfer(in, out) // Using resources
       } { case (in, out) => // Freeing resources
-        (IO(in.close()), IO(out.close())).tupled // From (IO[Unit], IO[Unit]) to IO[(Unit, Unit)]
-          .handleErrorWith(_ => IO.unit)
-          .void
+        (IO(in.close()), IO(out.close()))
+          .tupled // From (IO[Unit], IO[Unit]) to IO[(Unit, Unit)]
+          .handleErrorWith(_ => IO.unit).void
       }
   }
+
 }

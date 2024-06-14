@@ -1,6 +1,6 @@
 package snippets.spawn
 
-import cats.effect.{ ExitCode, IO, IOApp }
+import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.all._
 
 object ParTraverseExample extends IOApp {
@@ -10,4 +10,5 @@ object ParTraverseExample extends IOApp {
       l <- (-10 to 10).toList.parTraverse(i => IO(5f / i))
       _ <- IO.println(l)
     } yield ExitCode.Success
+
 }

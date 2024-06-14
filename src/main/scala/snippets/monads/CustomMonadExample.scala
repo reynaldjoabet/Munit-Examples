@@ -8,5 +8,7 @@ object CustomMonadExample extends App {
     a <- CustomMonad(1)
     b <- CustomMonad(2).flatMap(x => CustomMonad(x + 1))
   } yield a + b
+
   println(res)
+
 }

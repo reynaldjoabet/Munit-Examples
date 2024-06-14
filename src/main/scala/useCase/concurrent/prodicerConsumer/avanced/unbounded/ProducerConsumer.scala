@@ -1,12 +1,13 @@
 package useCase.concurrent.prodicerConsumer.avanced.unbounded
 
-import cats.effect.std.Console
-import cats.effect.{ Async, Deferred, Ref, Sync }
-import cats.syntax.all._
-
 import scala.collection.immutable.Queue
 
+import cats.effect.{Async, Deferred, Ref, Sync}
+import cats.effect.std.Console
+import cats.syntax.all._
+
 object ProducerConsumer {
+
   case class State[F[_], A](queue: Queue[A], takers: Queue[Deferred[F, A]])
 
   object State {
@@ -16,16 +17,18 @@ object ProducerConsumer {
   def consumer[F[_]: Async: Console](id: Int, state: Ref[F, State[F, Int]]): F[Unit] = {
     val consume: F[Int] = {
       Deferred[F, Int].flatMap { taker =>
-        state.modify {
-          case State(queue, takers) if queue.nonEmpty => // If queue is not empty
-            val (i, rest) = queue.dequeue
-            State(rest, takers) -> Async[F].pure(i) // Got element in queue, we can just return it
-          case State(queue, takers) =>
-            State(
-              queue,
-              takers.enqueue(taker)
-            ) -> taker.get // No element in queue, must block caller until some is available
-        }.flatten
+        state
+          .modify {
+            case State(queue, takers) if queue.nonEmpty => // If queue is not empty
+              val (i, rest) = queue.dequeue
+              State(rest, takers) -> Async[F].pure(i) // Got element in queue, we can just return it
+            case State(queue, takers) =>
+              State(
+                queue,
+                takers.enqueue(taker)
+              ) -> taker.get // No element in queue, must block caller until some is available
+          }
+          .flatten
       }
     }
 
@@ -36,15 +39,21 @@ object ProducerConsumer {
     } yield ()
   }
 
-  def producer[F[_]: Sync: Console](id: Int, counter: Ref[F, Int], state: Ref[F, State[F, Int]]): F[Unit] = {
+  def producer[F[_]: Sync: Console](
+    id: Int,
+    counter: Ref[F, Int],
+    state: Ref[F, State[F, Int]]
+  ): F[Unit] = {
     def produce(i: Int): F[Unit] =
-      state.modify {
-        case State(queue, takers) if takers.nonEmpty => // If there is almost a taker dequeue it and release it
-          val (taker, rest) = takers.dequeue
-          State(queue, rest) -> taker.complete(i).void
-        case State(queue, takers) => // If there aren't takers produce element
-          State(queue.enqueue(i), takers) -> Sync[F].unit
-      }.flatten
+      state
+        .modify {
+          case State(queue, takers) if takers.nonEmpty => // If there is almost a taker dequeue it and release it
+            val (taker, rest) = takers.dequeue
+            State(queue, rest) -> taker.complete(i).void
+          case State(queue, takers) => // If there aren't takers produce element
+            State(queue.enqueue(i), takers) -> Sync[F].unit
+        }
+        .flatten
 
     for {
       i <- counter.getAndUpdate(_ + 1) // Update the item
@@ -53,4 +62,5 @@ object ProducerConsumer {
       _ <- producer(id, counter, state)
     } yield ()
   }
+
 }

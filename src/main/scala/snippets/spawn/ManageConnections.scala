@@ -1,6 +1,6 @@
 package snippets.spawn
 
-import cats.effect.{ MonadCancel, Spawn }
+import cats.effect.{MonadCancel, Spawn}
 import cats.effect.syntax.all._
 import cats.syntax.all._
 
@@ -9,9 +9,11 @@ trait Server[F[_]] {
 }
 
 trait Connection[F[_]] {
+
   def read: F[Array[Byte]]
   def write(bytes: Array[Byte]): F[Unit]
   def close: F[Unit]
+
 }
 
 object ManageConnections {
@@ -25,12 +27,13 @@ object ManageConnections {
         _        <- conn.write(response)
       } yield ()
 
-    val handler = MonadCancel[F] uncancelable { poll =>
-      poll(server.accept) flatMap { conn =>
+    val handler = MonadCancel[F].uncancelable { poll =>
+      poll(server.accept).flatMap { conn =>
         handle(conn).guarantee(conn.close).start
       }
     }
 
     handler.foreverM
   }
+
 }

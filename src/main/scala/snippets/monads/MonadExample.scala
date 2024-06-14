@@ -1,9 +1,9 @@
 package snippets.monads
 
-import cats.Monad
-import cats.instances.option._
 import cats.instances.list._
+import cats.instances.option._
 import cats.syntax.all._
+import cats.Monad
 
 object MonadExample extends App {
 

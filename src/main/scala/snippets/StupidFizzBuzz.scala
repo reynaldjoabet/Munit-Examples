@@ -1,7 +1,8 @@
 package snippets
 
-import cats.effect.{ IO, IOApp }
 import scala.concurrent.duration._
+
+import cats.effect.{IO, IOApp}
 
 object StupidFizzBuzz extends IOApp.Simple {
 
@@ -18,6 +19,7 @@ object StupidFizzBuzz extends IOApp.Simple {
 
       _ <- (wait *> ctr.update(_ + 1)).foreverM.void
     } yield ()
+
 }
 
 /*

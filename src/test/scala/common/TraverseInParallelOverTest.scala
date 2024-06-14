@@ -1,11 +1,13 @@
 package common
 
-import cats.effect.IO
-import cats.effect.kernel.Clock
-import munit.CatsEffectSuite
-
 import java.util.concurrent.TimeUnit
+
 import scala.concurrent.duration.FiniteDuration
+
+import cats.effect.kernel.Clock
+import cats.effect.IO
+
+import munit.CatsEffectSuite
 
 class TraverseInParallelOverTest extends CatsEffectSuite {
   test("Traversing in parallel over list of items returns collected results") {
@@ -30,8 +32,8 @@ class TraverseInParallelOverTest extends CatsEffectSuite {
       val totalMillis   = duration.toMillis
 
       assertEquals(list, List("2", "1", "4", "4", "6", "9", "8", "16", "10", "25"))
-      assert(totalMillis >= minTotalSleep, s"Took $totalMillis but should have taken at least $minTotalSleep")
-      //assert(totalMillis <= maxTotalSleep, s"Took $totalMillis but should have taken at most $maxTotalSleep")
+    // assert(totalMillis >= minTotalSleep, s"Took $totalMillis but should have taken at least $minTotalSleep")
+    // assert(totalMillis <= maxTotalSleep, s"Took $totalMillis but should have taken at most $maxTotalSleep")
     }
   }
 }

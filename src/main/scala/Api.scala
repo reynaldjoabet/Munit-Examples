@@ -1,5 +1,3 @@
-
-
 // import cats.Applicative
 // import cats.data.Kleisli
 // import cats.effect._

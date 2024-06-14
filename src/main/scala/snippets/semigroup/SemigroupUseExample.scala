@@ -1,9 +1,10 @@
 package snippets.semigroup
 
-import cats.Semigroup
 import cats.syntax.all._
+import cats.Semigroup
 
 object SemigroupUseExample extends App {
+
   private val one: Option[Int] = Option(1)
   private val two: Option[Int] = Option(2)
 

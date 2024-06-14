@@ -1,6 +1,6 @@
 package snippets.deferred
 
-import cats.effect.{ Deferred, IO, IOApp }
+import cats.effect.{Deferred, IO, IOApp}
 import cats.syntax.all._
 
 object DeferredExample extends IOApp.Simple {

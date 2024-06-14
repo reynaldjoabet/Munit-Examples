@@ -1,7 +1,8 @@
 package snippets.spawn
 
 import scala.concurrent.duration._
-import cats.effect.{ ExitCode, IO, IOApp }
+
+import cats.effect.{ExitCode, IO, IOApp}
 
 object CancelationExample extends IOApp {
 
@@ -11,4 +12,5 @@ object CancelationExample extends IOApp {
       _      <- IO.sleep(1.second)
       _      <- target.cancel
     } yield ExitCode.Success
+
 }

@@ -1,11 +1,12 @@
 package github.api
 
-import common.Errors
-import github.data.{ Contributor, Repository }
-
 import cats.effect.IO
 
-/** GitHub client that contains some in-memory data for testing
+import common.Errors
+import github.data.{Contributor, Repository}
+
+/**
+  * GitHub client that contains some in-memory data for testing
   *
   * @param organizationsAndRepositories
   *   Map of organization names to their repositories
@@ -13,9 +14,10 @@ import cats.effect.IO
   *   Map of repository names to their contributors
   */
 class InMemoryGitHubAPI(
-    val organizationsAndRepositories: Map[String, List[Repository]],
-    val repositoriesAndContributors: Map[String, List[Contributor]]
+  val organizationsAndRepositories: Map[String, List[Repository]],
+  val repositoriesAndContributors: Map[String, List[Contributor]]
 ) extends GitHubAPI {
+
   override def repositoriesOfOrganization(organization: String): IO[List[Repository]] = {
     organizationsAndRepositories.get(organization) match {
       case None               => IO.raiseError(Errors.OrganizationNotFound(organization))
@@ -23,14 +25,19 @@ class InMemoryGitHubAPI(
     }
   }
 
-  override def contributorsOfRepository(organization: String, repository: String): IO[List[Contributor]] =
+  override def contributorsOfRepository(
+    organization: String,
+    repository: String
+  ): IO[List[Contributor]] =
     repositoriesAndContributors.get(repository) match {
       case None               => IO.raiseError(Errors.RepositoryNotFound(repository))
       case Some(repositories) => IO.pure(repositories)
     }
+
 }
 
 object InMemoryGitHubAPI {
+
   val organization1 = "organization1"
   val organization2 = "organization2"
   val repository1   = "repository1"
@@ -55,4 +62,5 @@ object InMemoryGitHubAPI {
         repository4 -> List(Contributor.Known(login2, 1), Contributor.Known(login4, 4))
       )
     )
+
 }

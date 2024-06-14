@@ -1,6 +1,6 @@
 package snippets.ref
 
-import cats.effect.{ ExitCode, IO, IOApp, Ref, Sync }
+import cats.effect.{ExitCode, IO, IOApp, Ref, Sync}
 import cats.syntax.all._
 //import cats.implicits._
 
@@ -18,14 +18,16 @@ object RefExample extends IOApp.Simple {
         c2 <- ref.updateAndGet(x => x + 1)
         _  <- putStrLn(show"Worker #$id >> $c2")
       } yield ()
+
   }
 
   override def run: IO[Unit] =
     for {
       ref <- Ref[IO].of(0)
-      w1 = new Worker[IO](1, ref)
-      w2 = new Worker[IO](2, ref)
-      w3 = new Worker[IO](3, ref)
-      _ <- List(w1.start, w2.start, w3.start).parSequence.void
+      w1   = new Worker[IO](1, ref)
+      w2   = new Worker[IO](2, ref)
+      w3   = new Worker[IO](3, ref)
+      _   <- List(w1.start, w2.start, w3.start).parSequence.void
     } yield ()
+
 }

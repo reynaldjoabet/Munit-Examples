@@ -1,23 +1,27 @@
 package common
 
-import cats.Parallel
-import cats.effect.IO
-import cats.effect.std.Random
-
 import java.util.concurrent.TimeUnit
+
 import scala.concurrent.duration.FiniteDuration
 
-/** Utility to traverse over a collection in parallel, performing an effect on each item and collecting results,
-  * delaying each execution by a small random sleep in milliseconds
+import cats.effect.std.Random
+import cats.effect.IO
+import cats.Parallel
+
+/**
+  * Utility to traverse over a collection in parallel, performing an effect on each item and
+  * collecting results, delaying each execution by a small random sleep in milliseconds
   */
 object TraverseInParallelOver {
+
   private val random = Random.scalaUtilRandom[IO]
 
-  /** Traverse over a collection in parallel, performing an effect on each item and collecting results, delaying each
-    * execution by a small random sleep in milliseconds.
+  /**
+    * Traverse over a collection in parallel, performing an effect on each item and collecting
+    * results, delaying each execution by a small random sleep in milliseconds.
     *
-    * Please note that order of items are not guaranteed, in fact due to random sleeps, the order will most likely to be
-    * different.
+    * Please note that order of items are not guaranteed, in fact due to random sleeps, the order
+    * will most likely to be different.
     *
     * {{{
     *   import cats.effect.IO
@@ -48,13 +52,18 @@ object TraverseInParallelOver {
     * @return
     *   List of collected results or a failed IO if any of the effects failed
     */
-  def apply[A, B](list: List[A], min: Long = 100L, max: Long = 500L)(effect: A => IO[List[B]]): IO[List[B]] =
+  def apply[A, B](list: List[A], min: Long = 100L, max: Long = 500L)(
+    effect: A => IO[List[B]]
+  ): IO[List[B]] =
     Parallel.parFlatTraverse[List, IO, A, B](list) { a =>
       randomDelay(min, max) *> effect(a)
     }
 
   private def randomDelay(min: Long, max: Long): IO[Unit] =
-    random.flatMap(_.betweenLong(min, max)).flatMap { randomSleepDuration =>
-      IO.sleep(FiniteDuration(randomSleepDuration, TimeUnit.MILLISECONDS))
-    }
+    random
+      .flatMap(_.betweenLong(min, max))
+      .flatMap { randomSleepDuration =>
+        IO.sleep(FiniteDuration(randomSleepDuration, TimeUnit.MILLISECONDS))
+      }
+
 }

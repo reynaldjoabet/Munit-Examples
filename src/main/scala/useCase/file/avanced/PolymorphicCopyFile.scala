@@ -1,19 +1,23 @@
 package useCase.file.avanced
 
-import useCase.file.PolymorphicUtils.copy
-import cats.effect.{ ExitCode, IO, IOApp }
-
 import java.io.File
-import java.nio.file.{ Files, Paths }
+import java.nio.file.{Files, Paths}
+
+import cats.effect.{ExitCode, IO, IOApp}
+
+import useCase.file.PolymorphicUtils.copy
 
 object PolymorphicCopyFile extends IOApp {
+
   override def run(args: List[String]): IO[ExitCode] = {
     for {
       _ <-
-        if (args.length != 2) IO.raiseError(new IllegalArgumentException("Add origin and destination files as args"))
+        if (args.length != 2)
+          IO.raiseError(new IllegalArgumentException("Add origin and destination files as args"))
         else IO.unit
       _ <-
-        if (!Files.exists(Paths.get(args.head))) IO.raiseError(new IllegalArgumentException("Files must be exists!"))
+        if (!Files.exists(Paths.get(args.head)))
+          IO.raiseError(new IllegalArgumentException("Files must be exists!"))
         else IO.unit
       _ <-
         if (args.head == args.tail.head)
@@ -34,8 +38,10 @@ object PolymorphicCopyFile extends IOApp {
       destinationFile = new File(args.tail.head)
 
       count <- copy[IO](originFile, destinationFile)
-      _     <- IO.println(s"$count bytes copied from ${originFile.getPath} to ${destinationFile.getPath}")
+      _ <-
+        IO.println(s"$count bytes copied from ${originFile.getPath} to ${destinationFile.getPath}")
 
     } yield ExitCode.Success
   }
+
 }

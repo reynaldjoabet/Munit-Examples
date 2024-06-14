@@ -1,8 +1,8 @@
 package snippets.clock
 
-import cats.effect.{ Clock, ExitCode, IO, IOApp }
-
 import scala.concurrent.duration.DurationInt
+
+import cats.effect.{Clock, ExitCode, IO, IOApp}
 
 object ClockExample extends IOApp {
 
@@ -13,4 +13,5 @@ object ClockExample extends IOApp {
       end   <- Clock[IO].realTime
       _     <- IO.println(end - start) // 3014911 microseconds
     } yield ExitCode.Success
+
 }

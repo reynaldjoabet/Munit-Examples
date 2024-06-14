@@ -1,14 +1,15 @@
 package common
 
-import common.Config.{ GitHub, Server }
-
 import cats.effect.IO
-import com.comcast.ip4s.{ Host, Port }
+
+import com.comcast.ip4s.{Host, Port}
+import common.Config.{GitHub, Server}
 // import pureconfig.generic.ProductHint
 // import pureconfig.{CamelCase, ConfigFieldMapping, ConfigReader}
 // import pureconfig.generic.semiauto._
 
-/** Application configuration
+/**
+  * Application configuration
   *
   * @param github
   *   [[GitHub]] configuration
@@ -22,7 +23,8 @@ object Config {
 
   // implicit lazy val configReader: ConfigReader[Config] = deriveReader
 
-  /** GitHub configuration
+  /**
+    * GitHub configuration
     *
     * @param token
     *   OAuth token to use for requests
@@ -35,7 +37,8 @@ object Config {
     // implicit lazy val githubReader: ConfigReader[GitHub] = deriveReader
   }
 
-  /** Server configuration
+  /**
+    * Server configuration
     *
     * @param host
     *   Host of the application
@@ -44,7 +47,8 @@ object Config {
     */
   case class Server(host: String, port: Int) {
 
-    /** Make [[Host]] from the config value
+    /**
+      * Make [[Host]] from the config value
       *
       * @return
       *   Created [[Host]] or a failed IO if host is invalid
@@ -52,16 +56,19 @@ object Config {
     def makeHost: IO[Host] =
       IO.fromOption(Host.fromString(host))(Errors.InvalidConfig("server.host", host))
 
-    /** Make [[Port]] from the config value
+    /**
+      * Make [[Port]] from the config value
       *
       * @return
       *   Created [[Port]] or a failed IO if port is invalid
       */
     def makePort: IO[Port] =
       IO.fromOption(Port.fromInt(port))(Errors.InvalidConfig("server.port", port))
+
   }
 
   object Server {
     // implicit lazy val serverReader: ConfigReader[Server] = deriveReader
   }
+
 }

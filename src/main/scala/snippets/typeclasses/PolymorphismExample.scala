@@ -1,6 +1,7 @@
 package snippets.typeclasses
 
 object PolymorphismExample extends App {
+
   // definizione delle case class per le forme geometriche
   case class Circle(radius: Double)
   case class Square(side: Double)

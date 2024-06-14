@@ -1,7 +1,7 @@
 package snippets.semaphore
 
-import cats.effect.{ IO, IOApp, Sync }
-import cats.effect.std.{ Console, Semaphore }
+import cats.effect.{IO, IOApp, Sync}
+import cats.effect.std.{Console, Semaphore}
 import cats.syntax.all._
 
 object SemaphoreExample extends IOApp.Simple {
@@ -14,6 +14,7 @@ object SemaphoreExample extends IOApp.Simple {
         F.delay(println(s"$name: Using resource")) >>
         F.delay(println(s"$name: Releasing")) >>
         semaphore.release
+
   }
 
   override def run: IO[Unit] =
@@ -24,4 +25,5 @@ object SemaphoreExample extends IOApp.Simple {
       r3 = new Reader[IO]("R3", s)
       _ <- List(r1.use, r2.use, r3.use).parSequence.void
     } yield ()
+
 }

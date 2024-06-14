@@ -1,19 +1,18 @@
-import MyMain._
 import cats.effect.{IO, Ref}
 import cats.implicits._
+
+import io.circe.literal._
 import io.circe.Json
 //import cats.syntax._
 import org.http4s.{HttpRoutes, Request}
-import io.circe.literal._
-//import org.http4s._
-
 import org.http4s.circe._
-
+import MyMain._
 
 class MainRoutesSuite extends munit.Http4sHttpRoutesSuite {
-  override val routes: HttpRoutes[IO] = helloWorldService <+> helloWorldService2 <+> greetService <+> MyMain.literal <+> lotsoftext <+>
-          fs <+> echoPost
 
+  override val routes: HttpRoutes[IO] =
+    helloWorldService <+> helloWorldService2 <+> greetService <+> MyMain.literal <+> lotsoftext <+>
+      fs <+> echoPost
 
   test(GET(uri"hello" / "Dino")).alias("Say hello to Dino") { response =>
     assertIO(response.as[String], "Hello, Dino. ")
@@ -34,7 +33,7 @@ class MainRoutesSuite extends munit.Http4sHttpRoutesSuite {
   }
 
   test(GET(uri"gzip")).alias("Lots of text") { response =>
-    assertIO(response.as[String].map(_.length), 5*700, clue = "Wrong length")
+    assertIO(response.as[String].map(_.length), 5 * 700, clue = "Wrong length")
   }
 
 //   test(GET(uri"fs/hello.txt")).alias("Get hello.txt from file system") { response =>
@@ -45,7 +44,9 @@ class MainRoutesSuite extends munit.Http4sHttpRoutesSuite {
 //    assertIO(response.as[String].map(_.contains("hello from twirl")), true)
 //  }
 
-  test(Request[IO](POST, uri"echo", body = fs2.Stream.emits("woof".getBytes))).alias("posting a body") { response =>
-    assertIO(response.as[String], "woof")
-  }
+  test(Request[IO](POST, uri"echo", body = fs2.Stream.emits("woof".getBytes)))
+    .alias("posting a body") { response =>
+      assertIO(response.as[String], "woof")
+    }
+
 }

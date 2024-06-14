@@ -1,10 +1,11 @@
 package github
 package data
 
-import io.circe.Codec
 import io.circe.generic.semiauto.deriveCodec
+import io.circe.Codec
 
-/** Model of a repository on GitHub
+/**
+  * Model of a repository on GitHub
   *
   * @param name
   *   Name of the repository

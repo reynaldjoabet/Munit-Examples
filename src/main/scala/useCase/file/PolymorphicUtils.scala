@@ -1,11 +1,12 @@
 package useCase.file
 
+import java.io._
+
 import cats.effect._
 import cats.syntax.all._
 
-import java.io._
-
 object PolymorphicUtils {
+
   private val BUFFER_SIZE = 1024 * 10
 
   def inputStream[F[_]: Sync](file: File): Resource[F, FileInputStream] = {
@@ -24,7 +25,8 @@ object PolymorphicUtils {
     }
   }
 
-  /** Method that create InputStream and OutputStream from input and output file
+  /**
+    * Method that create InputStream and OutputStream from input and output file
     *
     * @param inputFile
     *   file for input
@@ -35,7 +37,10 @@ object PolymorphicUtils {
     * @return
     *   touple with both resources in a single Resource instance
     */
-  def inputOutputStreams[F[_]: Sync](inputFile: File, outputFile: File): Resource[F, (InputStream, OutputStream)] = {
+  def inputOutputStreams[F[_]: Sync](
+    inputFile: File,
+    outputFile: File
+  ): Resource[F, (InputStream, OutputStream)] = {
     for {
       inStream  <- inputStream(inputFile)
       outStream <- outputStream(outputFile)
@@ -43,10 +48,10 @@ object PolymorphicUtils {
   }
 
   private def transmit[F[_]: Sync](
-      originFile: InputStream,
-      destinationFile: OutputStream,
-      buffer: Array[Byte],
-      acc: Long
+    originFile: InputStream,
+    destinationFile: OutputStream,
+    buffer: Array[Byte],
+    acc: Long
   ): F[Long] = {
     for {
       amount <- Sync[F].blocking(originFile.read(buffer, 0, buffer.length))
@@ -62,10 +67,15 @@ object PolymorphicUtils {
     } yield count
   }
 
-  private def transfer[F[_]: Sync](originFile: InputStream, destinationFile: OutputStream, bufferSize: Int): F[Long] =
+  private def transfer[F[_]: Sync](
+    originFile: InputStream,
+    destinationFile: OutputStream,
+    bufferSize: Int
+  ): F[Long] =
     transmit(originFile, destinationFile, new Array[Byte](bufferSize), 0L)
 
-  /** Method that copy data from file to another.
+  /**
+    * Method that copy data from file to another.
     *
     * @param originFile
     *   file of data to copy
@@ -79,9 +89,14 @@ object PolymorphicUtils {
     *   returns an IO instance with the byte copied.
     */
 
-  def copy[F[_]: Sync](originFile: File, destinationFile: File, bufferSize: Option[Int] = None): F[Long] = {
+  def copy[F[_]: Sync](
+    originFile: File,
+    destinationFile: File,
+    bufferSize: Option[Int] = None
+  ): F[Long] = {
     inputOutputStreams(originFile, destinationFile).use { case (in, out) =>
       transfer(in, out, bufferSize.getOrElse(BUFFER_SIZE))
     }
   }
+
 }

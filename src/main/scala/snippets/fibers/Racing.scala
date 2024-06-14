@@ -1,8 +1,9 @@
 package snippets.fibers
 
+import scala.concurrent.duration._
+
 import cats.effect._
 import cats.effect.syntax.all._
-import scala.concurrent.duration._
 
 object Racing extends IOApp.Simple {
 
@@ -15,12 +16,14 @@ object Racing extends IOApp.Simple {
         println(s"[${Thread.currentThread().getName}] $value")
         value
       }
+
   }
 
   val valuableIO: IO[Int] =
     IO("task starting").printThread *> IO.sleep(1.second).printThread >> IO(
       "task completed"
     ).printThread *> IO(1).printThread
+
   val vIO: IO[Int] = valuableIO.onCancel(IO("task: cancelled").printThread.void)
 
   val timeout: IO[Unit] =
@@ -61,4 +64,5 @@ object Racing extends IOApp.Simple {
     IO.sleep(2.second).as(2).onCancel(IO("second cancelled").printThread.void)
 
   def run: IO[Unit] = racePair(ioA, ioB).void // race().printThread.void or racePair(ioA, ioB).void
+
 }

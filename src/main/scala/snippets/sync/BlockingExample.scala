@@ -1,7 +1,8 @@
 package snippets.sync
 
-import cats.effect.{ ExitCode, IO, IOApp, Sync }
 import scala.io.Source
+
+import cats.effect.{ExitCode, IO, IOApp, Sync}
 
 object BlockingExample extends IOApp {
 
@@ -11,4 +12,5 @@ object BlockingExample extends IOApp {
       t <- Sync[IO].blocking(f.mkString)
       _ <- Sync[IO].blocking(f.close()) >> IO.println(t)
     } yield ExitCode.Success
+
 }

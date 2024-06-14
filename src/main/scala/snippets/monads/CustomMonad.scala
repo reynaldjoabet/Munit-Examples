@@ -1,9 +1,9 @@
 package snippets.monads
 
-import cats.Monad
-import cats.syntax.all._
-
 import scala.annotation.tailrec
+
+import cats.syntax.all._
+import cats.Monad
 
 case class CustomMonad[A](value: A) {
 
@@ -12,12 +12,14 @@ case class CustomMonad[A](value: A) {
 
   def map[B](f: A => B): CustomMonad[B] =
     CustomMonad(f(value))
+
 }
 
 object CustomMonad {
 
   implicit val customMonadInstance: Monad[CustomMonad] =
     new Monad[CustomMonad] {
+
       override def pure[A](x: A): CustomMonad[A] = CustomMonad(x)
 
       override def flatMap[A, B](fa: CustomMonad[A])(f: A => CustomMonad[B]): CustomMonad[B] =
@@ -32,5 +34,7 @@ object CustomMonad {
               case Right(b) => CustomMonad(b)
             }
         }
+
     }
+
 }

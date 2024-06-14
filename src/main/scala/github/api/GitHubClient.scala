@@ -1,21 +1,23 @@
 package github.api
 
-import common.{ Config, Errors, TraverseInParallelOver }
-import github.data.{ Contributor, Repository }
+import java.time.Instant
+
+import scala.util.matching.Regex
 
 import cats.effect.IO
+
+import common.{Config, Errors, TraverseInParallelOver}
+import github.data.{Contributor, Repository}
 //import com.typesafe.scalalogging.StrictLogging
-import io.circe.{ Decoder, Json }
+import io.circe.{Decoder, Json}
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.client.Client
 import org.http4s.implicits._
 import org.typelevel.ci.CIString
 
-import java.time.Instant
-import scala.util.matching.Regex
-
-/** GitHub client that implements [[GitHubAPI]], using GitHub REST API v3
+/**
+  * GitHub client that implements [[GitHubAPI]], using GitHub REST API v3
   *
   * @param http
   *   HTTP client to make request
@@ -23,11 +25,14 @@ import scala.util.matching.Regex
   *   Configuration of GitHub
   */
 //with StrictLogging
-class GitHubClient(private val http: Client[IO], private val config: Config.GitHub) extends GitHubAPI {
+class GitHubClient(private val http: Client[IO], private val config: Config.GitHub)
+    extends GitHubAPI {
+
   import GitHubClient._
 
   private val linkHeaderLastPageRegex: Regex =
-    (s"<https:\\/\\/api\\.github\\.com.+page=(\\d+)&per_page=" + config.perPage + ">; rel=\"last\"").r
+    (s"<https:\\/\\/api\\.github\\.com.+page=(\\d+)&per_page=" + config.perPage + ">; rel=\"last\"")
+      .r
 
   override def repositoriesOfOrganization(organization: String): IO[List[Repository]] =
     paginatedGetRequest(
@@ -44,17 +49,22 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
           IO.raiseError(Errors.OrganizationNotFound(organization))
       },
       parse = { response =>
-        response.as[List[Repository]].handleErrorWith { e =>
-          failWithResponseDetails(
-            response,
-            s"Failed to get repositories of organization '$organization' from GitHub",
-            Some(e)
-          )
-        }
+        response
+          .as[List[Repository]]
+          .handleErrorWith { e =>
+            failWithResponseDetails(
+              response,
+              s"Failed to get repositories of organization '$organization' from GitHub",
+              Some(e)
+            )
+          }
       }
     )
 
-  override def contributorsOfRepository(organization: String, repository: String): IO[List[Contributor]] =
+  override def contributorsOfRepository(
+    organization: String,
+    repository: String
+  ): IO[List[Contributor]] =
     paginatedGetRequest(
       action = s"Getting contributors of repository '$organization/$repository' from GitHub",
       uri = apiHost / "repos" / organization / repository / "contributors" +? ("anon" -> true),
@@ -69,13 +79,15 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
           IO.raiseError(Errors.RepositoryNotFound(s"$organization/$repository"))
       },
       parse = { response =>
-        response.as[List[Contributor]].handleErrorWith { e =>
-          failWithResponseDetails(
-            response,
-            s"Failed to get contributors of repository '$organization/$repository' from GitHub",
-            Some(e)
-          )
-        }
+        response
+          .as[List[Contributor]]
+          .handleErrorWith { e =>
+            failWithResponseDetails(
+              response,
+              s"Failed to get contributors of repository '$organization/$repository' from GitHub",
+              Some(e)
+            )
+          }
       }
     ).handleErrorWith {
       case e: Errors.APIError if e.message.contains("contributor list is too large") =>
@@ -86,7 +98,9 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
         IO.raiseError(e)
     }
 
-  /** Performs a GET request to GitHub with given parameters, handling OAuth, pagination and rate limiting
+  /**
+    * Performs a GET request to GitHub with given parameters, handling OAuth, pagination and rate
+    * limiting
     *
     * @param action
     *   Description of the action, used for logging
@@ -105,15 +119,16 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
     *   Type of the requested value
     *
     * @return
-    *   A list of requested items (collected from all pages, if available) or a failed IO in case of an error
+    *   A list of requested items (collected from all pages, if available) or a failed IO in case of
+    *   an error
     */
   def paginatedGetRequest[A: Decoder](
-      action: String,
-      uri: Uri,
-      page: Int,
-      lastPage: Option[Int],
-      customStatusCheck: PartialFunction[Response[IO], IO[List[A]]],
-      parse: Response[IO] => IO[List[A]]
+    action: String,
+    uri: Uri,
+    page: Int,
+    lastPage: Option[Int],
+    customStatusCheck: PartialFunction[Response[IO], IO[List[A]]],
+    parse: Response[IO] => IO[List[A]]
   ): IO[List[A]] =
     // IO(//lastPage.fold(logger.info(action))(lp => logger.info(s"$action ($page/$lp)"))) *>
     http
@@ -127,7 +142,7 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
         )
       )
       .use { response =>
-        val maybeCheckResult = checkRateLimit(response) orElse customStatusCheck.unapply(response)
+        val maybeCheckResult = checkRateLimit(response).orElse(customStatusCheck.unapply(response))
 
         maybeCheckResult match {
           case Some(checkResult) =>
@@ -142,10 +157,14 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
 
           case _ =>
             // We got the first page, try to paginate.
-            val extractedLastPage = response.headers.get(CIString("Link")).map(_.head.value).flatMap {
-              case linkHeaderLastPageRegex(lastPageString) => lastPageString.toIntOption
-              case _                                       => None
-            }
+            val extractedLastPage = response
+              .headers
+              .get(CIString("Link"))
+              .map(_.head.value)
+              .flatMap {
+                case linkHeaderLastPageRegex(lastPageString) => lastPageString.toIntOption
+                case _                                       => None
+              }
 
             extractedLastPage match {
               case None =>
@@ -155,30 +174,32 @@ class GitHubClient(private val http: Client[IO], private val config: Config.GitH
               case Some(lastPage) =>
                 // Get subsequent pages in parallel and collect results.
                 for {
-                  firstPage <- parse(response)
+                  firstPage  <- parse(response)
                   pageNumbers = ((page + 1) to lastPage).toList
                   subsequentPages <- TraverseInParallelOver(pageNumbers) { currentPage =>
-                    paginatedGetRequest(
-                      action,
-                      uri,
-                      currentPage,
-                      Some(lastPage),
-                      customStatusCheck,
-                      parse
-                    )
-                  }
-                } yield {
-                  firstPage ++ subsequentPages
-                }
+                                       paginatedGetRequest(
+                                         action,
+                                         uri,
+                                         currentPage,
+                                         Some(lastPage),
+                                         customStatusCheck,
+                                         parse
+                                       )
+                                     }
+                } yield firstPage ++ subsequentPages
             }
         }
       }
+
 }
+
 //extends StrictLogging
 object GitHubClient {
+
   val apiHost: Uri = uri"https://api.github.com"
 
-  /** Checks given response for a rate limit error
+  /**
+    * Checks given response for a rate limit error
     *
     * @param response
     *   An HTTP response
@@ -196,7 +217,10 @@ object GitHubClient {
       val maybeRemainingRateLimit = response.headers.get(CIString("X-RateLimit-Remaining"))
       val maybeRateLimitReset     = response.headers.get(CIString("X-RateLimit-Reset"))
 
-      (maybeRemainingRateLimit.map(_.head.value), maybeRateLimitReset.flatMap(_.head.value.toLongOption)) match {
+      (
+        maybeRemainingRateLimit.map(_.head.value),
+        maybeRateLimitReset.flatMap(_.head.value.toLongOption)
+      ) match {
         case (Some("0"), Some(rateLimitReset)) =>
           Some(IO.raiseError(Errors.RateLimited(Instant.ofEpochSecond(rateLimitReset))))
 
@@ -205,8 +229,9 @@ object GitHubClient {
       }
     }
 
-  /** Returns a failed IO with error, possibly including some details; also logs details about the response for
-    * debugging purposes
+  /**
+    * Returns a failed IO with error, possibly including some details; also logs details about the
+    * response for debugging purposes
     *
     * @param response
     *   An HTTP response
@@ -221,7 +246,11 @@ object GitHubClient {
     * @return
     *   A failed IO with error, possibly including some details
     */
-  def failWithResponseDetails[A](response: Response[IO], log: String, maybeCause: Option[Throwable] = None): IO[A] =
+  def failWithResponseDetails[A](
+    response: Response[IO],
+    log: String,
+    maybeCause: Option[Throwable] = None
+  ): IO[A] =
     response
       .as[Json]
       .redeem(
@@ -239,9 +268,10 @@ object GitHubClient {
         // )
         IO.raiseError(
           Errors.Unavailable(
-            maybeCause = maybeCause orElse errorOrBodyAndDetails.left.toOption,
+            maybeCause = maybeCause.orElse(errorOrBodyAndDetails.left.toOption),
             details = errorOrBodyAndDetails.toOption.flatMap(_._2)
           )
         )
       }
+
 }

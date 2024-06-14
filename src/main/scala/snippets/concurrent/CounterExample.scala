@@ -1,6 +1,6 @@
 package snippets.concurrent
 
-import cats.effect.{ ExitCode, IO, IOApp }
+import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 
 object CounterExample extends IOApp.Simple {
@@ -13,4 +13,5 @@ object CounterExample extends IOApp.Simple {
       value  <- state.get
       _      <- IO.println(s"The final value is: $value") // => The final value is: 100
     } yield ()
+
 }

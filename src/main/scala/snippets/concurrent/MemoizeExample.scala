@@ -1,6 +1,6 @@
 package snippets.concurrent
 
-import cats.effect.{ ExitCode, IO, IOApp }
+import cats.effect.{ExitCode, IO, IOApp}
 
 object MemoizeExample extends IOApp {
 
@@ -14,4 +14,5 @@ object MemoizeExample extends IOApp {
       _        <- IO.println(res1 ++ res2)
     } yield ExitCode.Success
   }
+
 }

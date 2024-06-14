@@ -279,3 +279,182 @@ sbt:Munit-Examples> show remoteCacheId
 
  `Test / packageCache / pushRemoteCacheArtifact`  defaults to true, set it to false to only push compiled artifacts and not the test artifacts
 
+
+#### Aggregation 
+Aggregation means that running a task on the aggregate project will also run it on the aggregated projects. For example,
+```scala
+lazy val root = (project in file("."))
+  .aggregate(util, core)
+
+lazy val util = (project in file("util"))
+
+lazy val core = (project in file("core"))
+```
+
+
+#### Classpath dependencies 
+A project may depend on code in another project. This is done by adding a dependsOn method call. For example, if `core` needed `util` on its classpath, you would define core as:
+
+```scala
+lazy val core = project.dependsOn(util)
+```
+
+Now code in `core` can use classes from `util`. This also creates an ordering between the projects when compiling them; `util` must be updated and compiled before `core` can be compiled
+
+#### Per-configuration classpath dependencies
+
+`core dependsOn(util)` means that the compile configuration in core depends on the compile configuration in util. You could write this explicitly as `dependsOn(util % "compile->compile")`.
+
+The `->` in `"compile->compile"` means “depends on” so `"test->compile"` means the test configuration in core would depend on the compile configuration in `util`.
+
+Omitting the `->config` part implies `->compile`, so `dependsOn(util % "test")` means that the `test` configuration in `core` depends on the `Compile` configuration in `util`.
+
+A useful declaration is "test->test" which means test depends on test. This allows you to put utility code for testing in util/src/test/scala and then use that code in core/src/test/scala, for example.
+
+
+```scala
+final case class Contributor(
+    login: String,
+    contributions: Int,
+    url: String,
+    avatar: Option[String]
+)
+
+object Contributor {
+
+  implicit val ContributorDecoder: Decoder[Contributor] = json =>
+    for {
+      login         <- json.get[String]("login")
+      contributions <- json.get[Int]("contributions")
+      url           <- json.get[String]("html_url")
+      avatar        <- json.get[Option[String]]("avatar_url")
+    } yield Contributor(login, contributions, url, avatar.filter(_.nonEmpty))
+
+}
+```
+
+```scala
+
+final case class Scope(
+    project: ScopeAxis[Reference],
+    config: ScopeAxis[ConfigKey],
+    task: ScopeAxis[AttributeKey[_]],
+    extra: ScopeAxis[AttributeMap]
+)
+
+object Scope {
+  val ThisScope: Scope = Scope(This, This, This, This)
+  val Global: Scope = Scope(Zero, Zero, Zero, Zero)
+  val GlobalScope: Scope = Global
+}
+
+sealed trait ScopeAxis[+S] {}
+
+
+/**
+ * This is a scope component that represents not being
+ * scoped by the user, which later could be further scoped automatically
+ * by sbt.
+ */
+case object This extends ScopeAxis[Nothing]
+
+
+/**
+ * Zero is a scope component that represents not scoping.
+ * It is a universal fallback component that is strictly weaker
+ * than any other values on a scope axis.
+ */
+case object Zero extends ScopeAxis[Nothing]
+/**
+ * Select is a type constructor that is used to wrap type `S`
+ * to make a scope component, equivalent of Some in Option.
+ */
+final case class Select[S](s: S) extends ScopeAxis[S]
+
+```
+These dependencies are provided, because they should not be packaged into the JAR file
+
+
+A task can be scoped. When a task depends on another task, it can depend on that task in a particular scope.
+
+
+Scoping by another task is incredibly useful
+
+what it means is that the same task key can be used and explicitly configured for many tasks
+
+
+```scala
+sbt:Munit-Examples> inspect tree test:sources
+[info] Test / sources = Task[scala.collection.Seq[java.io.File]]
+[info]   +-Test / managedSources = Task[scala.collection.Seq[java.io.File]]
+[info]   | +-Global / inputFileStamper = Hash
+[info]   | +-Global / managedFileStampCache = Task[sbt.nio.FileStamp$Cache]
+[info]   | +-Test / sourceGenerators = List()
+[info]   | 
+[info]   +-Test / unmanagedSources = Task[scala.collection.Seq[java.io.File]]
+[info]     +-Test / unmanagedSources / inputFileStamps = Task[scala.collection.Seq[sc..
+[info]       +-Global / state = Task[sbt.State]
+[info]       +-Test / unmanagedSources / allInputPathsAndAttributes = Task[scala.coll..
+[info]       | +-Global / state = Task[sbt.State]
+[info]       | +-Global / dynamicInputs = Task[scala.Option[scala.collection.mutable...
+[info]       | +-Test / unmanagedSources / fileInputs = List(/Users/locatiron/P..
+[info]       | | +-baseDirectory = 
+[info]       | | +-Global / sourcesInBase = true
+[info]       | | +-Test / unmanagedSourceDirectories = List(~/location/Pr..
+[info]       | | | +-Global / crossPaths = true
+[info]       | | | +-Test / javaSource = src/test/java
+[info]       | | | | +-Test / sourceDirectory = src/test
+[info]       | | | |   +-Test / configuration = test
+[info]       | | | |   +-sourceDirectory = src
+[info]       | | | |     +-baseDirectory = 
+[info]       | | | |       +-thisProject = Project(id root, base: /location/..
+[info]       | | | |       
+[info]       | | | +-pluginCrossBuild / sbtBinaryVersion = 1.0
+[info]       | | | +-Global / sbtPlugin = false
+[info]       | | | +-ThisBuild / scalaBinaryVersion = 2.13
+[info]       | | | +-Test / scalaSource = src/test/scala
+[info]       | | | | +-Test / sourceDirectory = src/test
+[info]       | | | |   +-Test / configuration = test
+[info]       | | | |   +-sourceDirectory = src
+[info]       | | | |     +-baseDirectory = 
+[info]       | | | |       +-thisProject = Project(id root, base: /location/..
+[info]       | | | |       
+[info]       | | | +-ThisBuild / scalaVersion = 2.13.13
+[info]       | | | 
+[info]       | | +-Global / excludeFilter = HiddenFileFilter
+[info]       | | +-Zero / unmanagedSources / includeFilter = ExtensionFilter(java,sca..
+[info]       | | 
+[info]       | +-Global / fileTreeView = Task[sbt.nio.file.FileTreeView[scala.Tuple2[..
+[info]       | +-Global / inputFileStamper = Hash
+[info]       | +-Test / unmanagedSources / watchForceTriggerOnAnyChange = false
+[info]       | 
+[info]       +-Global / fileInputExcludeFilter = IsDirectory || HiddenFileFilter
+[info]       +-Global / fileInputIncludeFilter = AllPass
+[info]       +-Global / inputFileStamper = Hash
+[info]       +-Global / unmanagedFileStampCache = Task[sbt.nio.FileStamp$Cache]
+[info]       
+```
+
+ In the above tree we can see that `unmanagedSources` depends on `includeFilter` scoped to the `unmanagedSources` task. `includeFilter` may also be used elsewhere, for example, in discovering resources, in that case it will be scoped to the `unmanagedResources` task.
+
+
+ To apply a scope to a setting, you can use the in method:
+
+`sources in Compile += file("src/other/scala/Other.scala")`
+
+Applying multiple scopes can be done by using multiple in calls, for example:
+
+`excludeFilter in sbtFunProject in unmanagedSources in Compile := "_*"`
+
+Or, they can also be done by passing multiple scopes to the in method, in the order project, configuration then task:
+
+`excludeFilter in (sbtFunProject, Compile, unmanagedSources) := "_*"`
+
+The same syntax can be used when depending on settings, though make sure you put parenthesis around the whole scoped setting in order to invoke the value method on it:
+
+```scala
+(sources in Compile) := 
+  (managedSources in Compile).value ++ 
+  (unmanagedSources in Compile).value```
+
+  

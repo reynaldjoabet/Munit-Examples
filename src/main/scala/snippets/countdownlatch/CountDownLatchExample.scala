@@ -1,9 +1,9 @@
 package snippets.countdownlatch
 
-import cats.implicits._
 import cats.effect._
 import cats.effect.std.CountDownLatch
 import cats.effect.unsafe.implicits.global
+import cats.implicits._
 
 object CountDownLatchExample extends IOApp.Simple {
 
@@ -16,4 +16,5 @@ object CountDownLatchExample extends IOApp.Simple {
       _     <- latch.release >> IO.println("Third release")
       _     <- fiber.join
     } yield ()
+
 }

@@ -1,10 +1,10 @@
 package snippets.fibers
 
-import cats.effect.kernel.Outcome
-import cats.effect.{ ExitCode, Fiber, FiberIO, IO, IOApp }
-import cats.implicits._
-
 import scala.concurrent.duration.DurationInt
+
+import cats.effect.{ExitCode, Fiber, FiberIO, IO, IOApp}
+import cats.effect.kernel.Outcome
+import cats.implicits._
 
 object FiberExample extends IOApp {
 
@@ -18,12 +18,14 @@ object FiberExample extends IOApp {
         println(s"[${Thread.currentThread().getName}] $value")
         value
       }
+
   }
 
   def sameThread(): IO[Unit] = for {
     _ <- intValue.printThread
     _ <- stringValue.printThread
   } yield ()
+
   /*
   I tre parametri generici sono:
   - Tipo dell'effetto: in questo caso IO
@@ -72,4 +74,5 @@ object FiberExample extends IOApp {
     // runOnAnotherThread(intValue).printThread.as(ExitCode.Success)
     // throwOnAnotherThread().printThread.as(ExitCode.Success)
     cancelOnAnotherThread().printThread.as(ExitCode.Success)
+
 }

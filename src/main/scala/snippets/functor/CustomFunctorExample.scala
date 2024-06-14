@@ -1,9 +1,10 @@
 package snippets.functor
 
-import cats.Functor
 import cats.syntax.functor._
+import cats.Functor
 
 object CustomFunctorExample extends App {
+
   case class CustomFunctor[A](value: A)
 
   object CustomFunctor {
@@ -12,8 +13,11 @@ object CustomFunctorExample extends App {
 
       def map[A, B](fa: CustomFunctor[A])(f: A => B): CustomFunctor[B] =
         CustomFunctor(f(fa.value))
+
     }
+
   }
 
   print(CustomFunctor(5).map(_ + 1))
+
 }

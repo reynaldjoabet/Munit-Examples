@@ -1,8 +1,8 @@
 package snippets.sync
 
-import cats.effect.{ ExitCode, IO, IOApp, Sync }
-
 import java.util.concurrent.atomic.AtomicLong
+
+import cats.effect.{ExitCode, IO, IOApp, Sync}
 
 object DelayExample extends IOApp {
 
@@ -14,4 +14,5 @@ object DelayExample extends IOApp {
       _                  <- IO.println(counterIncremented)
     } yield ExitCode.Success
   }
+
 }

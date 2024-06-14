@@ -1,9 +1,11 @@
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Properties
 import java.nio.file.NoSuchFileException
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.Properties
+
 class MySuite extends munit.FunSuite {
+
   test("hello") {
     val obtained = 42
     val expected = 42
@@ -60,4 +62,5 @@ class MySuite extends munit.FunSuite {
       assertEquals(squareOfMinus4, 16)
     }
   }
+
 }

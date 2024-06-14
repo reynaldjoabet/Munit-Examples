@@ -1,8 +1,8 @@
 package snippets.fibers
 
-import cats.effect.{ IO, IOApp }
-
 import scala.concurrent.duration.DurationInt
+
+import cats.effect.{IO, IOApp}
 
 object FiberCancelationExample extends IOApp.Simple {
 
@@ -11,4 +11,5 @@ object FiberCancelationExample extends IOApp.Simple {
 
     loop.timeout(5.seconds) // Interrupt execution of fiber
   }
+
 }

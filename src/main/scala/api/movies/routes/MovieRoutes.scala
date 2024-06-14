@@ -1,26 +1,27 @@
 package api.movies.routes
 
-import api.movies.Models.{ Movie, MovieWithId }
-import api.movies.MoviesStore
-import org.http4s.{ HttpRoutes, Response }
-import cats.syntax.all._
+import scala.concurrent.duration._
+
+import cats.data.Validated.{Invalid, Valid}
 import cats.effect._
-import org.http4s.dsl.io._
-import org.http4s.dsl.Http4sDsl
-import com.comcast.ip4s._
-import cats.effect.IO
-import io.circe.syntax._
-import io.circe.generic.auto._
-import io.circe._
-import org.http4s.circe.CirceEntityEncoder._
-import org.http4s.circe.toMessageSyntax
-import api.movies.Utils.QueryParams._
-import cats.data.Validated.{ Invalid, Valid }
-import org.http4s.client.{ Client, JavaNetClientBuilder }
 //import cats.implicits._
 import cats.effect.implicits._
+import cats.effect.IO
 import cats.syntax.all._
-import scala.concurrent.duration._
+
+import api.movies.Models.{Movie, MovieWithId}
+import api.movies.MoviesStore
+import api.movies.Utils.QueryParams._
+import com.comcast.ip4s._
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
+import org.http4s.{HttpRoutes, Response}
+import org.http4s.circe.toMessageSyntax
+import org.http4s.circe.CirceEntityEncoder._
+import org.http4s.client.{Client, JavaNetClientBuilder}
+import org.http4s.dsl.io._
+import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.client.EmberClientBuilder
 
 object MovieRoutes {
@@ -35,14 +36,18 @@ object MovieRoutes {
       case GET -> Root =>
         Ok("Hello World!")
 
-      /** Get movie by ID
+      /**
+        * Get movie by ID
         */
       case GET -> Root / "api" / "movie" / UUIDVar(movieId) =>
         moviesStore
           .getMovieById(movieId)
-          .flatMap(maybeMovie => maybeMovie.fold(NotFound(s"Wrong id $movieId"))(movie => Ok(movie.asJson)))
+          .flatMap(maybeMovie =>
+            maybeMovie.fold(NotFound(s"Wrong id $movieId"))(movie => Ok(movie.asJson))
+          )
 
-      /** Create movie
+      /**
+        * Create movie
         */
       case req @ POST -> Root / "api" / "movie" =>
         for {
@@ -51,30 +56,34 @@ object MovieRoutes {
           response   <- Created(addedMovie.asJson)
         } yield response
 
-      /** Update Movie
+      /**
+        * Update Movie
         */
       case req @ PUT -> Root / "api" / "movie" / UUIDVar(movieId) =>
         for {
           maybeMovie <- moviesStore.getMovieById(movieId)
           movieToAdd <- req.decodeJson[Movie]
           response <- maybeMovie.fold(NotFound(s"No movie with id $movieId found"))(movie =>
-            moviesStore.updateMovie(movieId, movieToAdd) >> Ok(
-              new MovieWithId(movieId.toString, movieToAdd).asJson
-            )
-          )
+                        moviesStore.updateMovie(movieId, movieToAdd) >> Ok(
+                          new MovieWithId(movieId.toString, movieToAdd).asJson
+                        )
+                      )
         } yield response
 
-      /** Delete movie
+      /**
+        * Delete movie
         */
       case DELETE -> Root / "api" / "movie" / UUIDVar(movieId) =>
         for {
           maybeMovie <- moviesStore.getMovieById(movieId)
           response <- maybeMovie.fold(NotFound(s"No movie with id $movieId found"))(movie =>
-            moviesStore.deleteMovie(movieId) >> Ok(s"Successfully deleted movie ${movie.id}")
-          )
+                        moviesStore
+                          .deleteMovie(movieId) >> Ok(s"Successfully deleted movie ${movie.id}")
+                      )
         } yield response
 
-      /** Get movies list directed by director, can also filter them per year
+      /**
+        * Get movies list directed by director, can also filter them per year
         */
       case GET -> Root / "api" / "movies" :? DirectorQueryParamMatcher(
             director
@@ -89,22 +98,24 @@ object MovieRoutes {
                 case Valid(year) =>
                   val moviesInYear = movies.filter(_.movie.year === year.getValue)
                   if (moviesInYear.nonEmpty) Ok(moviesInYear.asJson)
-                  else NotFound(s"No movies directed for ${director} in ${year}")
+                  else NotFound(s"No movies directed for $director in $year")
               }
           )
 
-      /** Get movies list by year
+      /**
+        * Get movies list by year
         */
       case GET -> Root / "api" / "movies" :? YearQueryParamMatcher(maybeYear) =>
         def findMoviesBy(year: Int): F[Response[F]] = for {
           movies <- moviesStore.getFilteredMoviesByYear(year)
           response <-
-            if (movies.nonEmpty) Ok(movies.asJson) else NotFound(s"No movies in ${year} found")
+            if (movies.nonEmpty) Ok(movies.asJson) else NotFound(s"No movies in $year found")
         } yield response
 
         maybeYear.fold(_ => BadRequest("Invalid year passed"), year => findMoviesBy(year.getValue))
 
-      /** Get movies list by genre
+      /**
+        * Get movies list by genre
         */
       case GET -> Root / "api" / "movies" :? GenreQueryParamMatcher(genre) =>
         moviesStore
@@ -114,7 +125,8 @@ object MovieRoutes {
             else Ok(movies.asJson)
           )
 
-      /** Get movies list by actor
+      /**
+        * Get movies list by actor
         */
       case GET -> Root / "api" / "movies" :? ActorQueryParamMatcher(actor) =>
         moviesStore
@@ -124,27 +136,31 @@ object MovieRoutes {
             else Ok(movies.asJson)
           )
 
-      /** Get movies list
+      /**
+        * Get movies list
         */
       case GET -> Root / "api" / "movies" =>
-        moviesStore.getAllMovies.flatMap(movies => if (movies.nonEmpty) Ok(movies.asJson) else NoContent())
+        moviesStore
+          .getAllMovies
+          .flatMap(movies => if (movies.nonEmpty) Ok(movies.asJson) else NoContent())
 
-      /** Get movies rating
+      /**
+        * Get movies rating
         */
       case GET -> Root / "api" / "movies" / "rating" =>
-        
         for {
           movies <- moviesStore.getAllMovies
-          titles = movies.map(_.movie.title)
-          movieRatingPairsList <- titles.parTraverse(title =>
-            Async[F].delay(title->33)//moviesStore.getMoviesRating(title, client).map(r => (title, r)) //         //EmberClientBuilder.default.build.use(client=>moviesStore.getMoviesRating(title, client).map(r => (title, r))
-          )
+          titles  = movies.map(_.movie.title)
+          movieRatingPairsList <- titles.parTraverse(title => Async[F].delay(title -> 33) // moviesStore.getMoviesRating(title, client).map(r => (title, r)) //         //EmberClientBuilder.default.build.use(client=>moviesStore.getMoviesRating(title, client).map(r => (title, r))
+                                  )
           (bestTitle, score) = movieRatingPairsList.maxBy(_._2)
-          response <- Ok(
-            s"${movieRatingPairsList.map(t => s"${t._1}: ${t._2}").mkString("; ")}. The best movie is $bestTitle with a score of $score"
-          )
+          response <-
+            Ok(
+              s"${movieRatingPairsList.map(t => s"${t._1}: ${t._2}").mkString("; ")}. The best movie is $bestTitle with a score of $score"
+            )
         } yield response
 
     }
   }
+
 }

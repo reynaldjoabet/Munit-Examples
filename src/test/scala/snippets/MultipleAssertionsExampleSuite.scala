@@ -1,10 +1,12 @@
 package snippets
 
+import cats.effect.{IO, SyncIO}
 import cats.syntax.all._
-import cats.effect.{ IO, SyncIO }
+
 import munit.CatsEffectSuite
 
 class MultipleAssertionsExampleSuite extends CatsEffectSuite {
+
   test("multiple IO-assertions should be composed") {
     assertIO(IO(42), 42) *>
       assertIO_(IO.unit)
@@ -28,4 +30,5 @@ class MultipleAssertionsExampleSuite extends CatsEffectSuite {
       _ <- assertSyncIO_(SyncIO.unit)
     } yield ()
   }
+
 }

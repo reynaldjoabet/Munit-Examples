@@ -1,8 +1,8 @@
 package snippets.async
 
-import cats.effect.{ Async, ExitCode, IO, IOApp }
-
 import scala.concurrent.ExecutionContext
+
+import cats.effect.{Async, ExitCode, IO, IOApp}
 
 object AsyncExecutionContextExample extends IOApp {
 
@@ -13,11 +13,12 @@ object AsyncExecutionContextExample extends IOApp {
     for {
       _ <- printThread // WorkStealingThreadPool
       _ <- Async[IO].evalOn(
-        printThread,
-        ExecutionContext.global
-      ) // ExecutionContextImpl$$anon$3@1f8881a1[Running, parallelism = 8, size = 1, active = 1, running = 1, steals = 0, tasks = 0, submissions = 0]
+             printThread,
+             ExecutionContext.global
+           ) // ExecutionContextImpl$$anon$3@1f8881a1[Running, parallelism = 8, size = 1, active = 1, running = 1, steals = 0, tasks = 0, submissions = 0]
       _ <- printThread // WorkStealingThreadPool
     } yield ExitCode.Success
 
   }
+
 }

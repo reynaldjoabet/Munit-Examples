@@ -1,11 +1,11 @@
 package snippets.semaphore
 
-import cats.effect.{ IO, IOApp, Temporal }
-import cats.effect.std.{ Console, Semaphore }
-import cats.implicits._
-import cats.effect.syntax.all._
-
 import scala.concurrent.duration._
+
+import cats.effect.{IO, IOApp, Temporal}
+import cats.effect.std.{Console, Semaphore}
+import cats.effect.syntax.all._
+import cats.implicits._
 
 object SemaphoreMutexExample extends IOApp.Simple {
 
@@ -22,6 +22,7 @@ object SemaphoreMutexExample extends IOApp.Simple {
         z <- s.available
         _ <- F.println(s"$name >> Done | Availability: $z")
       } yield ()
+
   }
 
   override def run: IO[Unit] =
