@@ -1,6 +1,6 @@
 ThisBuild / scalaVersion := "2.13.13"
 
-val http4sVersion       = "0.23.18" //"1.0.0-M39"
+val http4sVersion       = "0.23.27" //"1.0.0-M39"
 val circeVersion        = "0.14.5"
 val `munit-cats-effect` = "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
 
