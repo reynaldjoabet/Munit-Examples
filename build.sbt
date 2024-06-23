@@ -39,7 +39,7 @@ lazy val root = (project in file(".")).settings(
     "org.http4s"     %% "http4s-ember-client" % http4sVersion,
     "org.http4s"     %% "http4s-ember-server" % http4sVersion,
     "org.http4s"     %% "http4s-dsl"          % http4sVersion,
-    "org.typelevel"  %% "log4cats-noop"       % "2.6.0",
+    "org.typelevel"  %% "log4cats-noop"       % "2.7.0",
     "org.http4s"     %% "http4s-circe"        % http4sVersion,
     "io.circe"       %% "circe-generic"       % circeVersion,
     "io.circe"       %% "circe-literal"       % circeVersion,
