@@ -6,7 +6,7 @@ val `munit-cats-effect` = "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % T
 
 val `http4s-munit` = "com.alejandrohdezma" %% "http4s-munit" % "0.15.1" % Test
 
-val munit = "org.scalameta" %% "munit" % "0.7.29" % Test
+val munit = "org.scalameta" %% "munit" % "1.0.0" % Test
 
 val compilationCacheSettings: Seq[Def.Setting[_]] = Seq(
   Compile / remoteCacheId := "id" /* this will set the folder of the compiled artifacts to 0.0.0-id */,
