@@ -34,7 +34,7 @@ val compilationCacheSettings: Seq[Def.Setting[_]] = Seq(
 lazy val root = (project in file(".")).settings(
   libraryDependencies ++= Seq(
     "org.typelevel"  %% "cats-core"           % "2.9.0",
-    ("org.typelevel" %% "cats-effect"         % "3.5.0").withSources().withJavadoc(),
+    ("org.typelevel" %% "cats-effect"         % "3.5.4").withSources().withJavadoc(),
     "org.typelevel"  %% "cats-effect-cps"     % "0.4.0",
     "org.http4s"     %% "http4s-ember-client" % http4sVersion,
     "org.http4s"     %% "http4s-ember-server" % http4sVersion,
